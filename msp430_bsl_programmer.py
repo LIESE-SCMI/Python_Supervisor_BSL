@@ -568,16 +568,8 @@ def main():
 
     bsl = MSP430_BSL(port=port, baudrate=args.baud)
 
-    # Solicitar modo bypass UART a Mission Boss
-    if (bsl.request_mb_bypass_uart_mode()):
-        print("[Mission Boss] Modo bypass UART activado, continuando con programación...")
-        time.sleep(1)
-
-        # Ejecutar programación
-        success = bsl.program_ti_txt(filepath)
-        sys.exit(0 if success else 1)
-    else:
-        print("[Mission Boss] No se pudo activar modo bypass UART. Abortando.")
-        sys.exit(1)
+    # Ejecutar programación
+    success = bsl.program_ti_txt(filepath)
+    sys.exit(0 if success else 1)
 
 main() 
