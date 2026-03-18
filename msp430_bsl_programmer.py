@@ -66,7 +66,7 @@ ACK_MESSAGES = {
 }
 
 # Tamaño máximo de datos por comando RX_DATA_BLOCK (SLAU550, tabla 2-3)
-MAX_BLOCK_SIZE = 128
+MAX_BLOCK_SIZE = 256
 
 # Password por defecto (flash virgen = 0xFF x 32)
 DEFAULT_PASSWORD = bytes([0xFF] * 32)

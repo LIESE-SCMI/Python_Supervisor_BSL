@@ -415,7 +415,7 @@ def parse_ti_txt(filepath: str) -> list[tuple[int, bytes]]:
 class MSP430_BSL:
     """Programador BSL para MSP430 vía puerto serie."""
 
-    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 5.0):
+    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 10.0):
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -825,7 +825,7 @@ def main():
         filepath = None
 
     bsl = MSP430_BSL(port=port, baudrate=args.baud)
-    
+
     # Programar: hardcodeado si no se pasa -f, TI-TXT si se pasa
     if args.file:
         success = bsl.program_ti_txt(args.file)
