@@ -176,7 +176,7 @@ class MSP430_BSL:
             stopbits=serial.STOPBITS_ONE,
             timeout=self.timeout
         )
-        print(f"[UART] Puerto {self.port} abierto a {self.baudrate} baud, paridad EVEN")
+        print(f"[UART] Puerto {self.port} abierto a {self.baudrate} baud, paridad NONE")
 
     def close(self):
         """Cierra la conexión UART."""
@@ -392,15 +392,6 @@ class MSP430_BSL:
         # 2. Abrir UART
         self.open()
         time.sleep(0.05)
-
-        self.ser.write(bytes(0))  # Enviar algo para "despertar" al MSP
-        self.ser.flush()
-        print('Esperando respuesta de la MSP', end='', flush=True)
-        while(not self.ser.read(1)):
-            print('.', end='', flush=True)
-        else:
-            print('MSP430 en modo BSL detectado, continuando con programación...')
-            time.sleep(1)
 
         try:
             # 3. Mass-erase
