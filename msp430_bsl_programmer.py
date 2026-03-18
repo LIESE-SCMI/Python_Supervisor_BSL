@@ -160,7 +160,7 @@ def parse_ti_txt(filepath: str) -> list[tuple[int, bytes]]:
 class MSP430_BSL:
     """Programador BSL para MSP430 vía puerto serie."""
 
-    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 5.0):
+    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 50.0):
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -424,6 +424,7 @@ class MSP430_BSL:
                     while offset < len(data):
                         chunk = data[offset : offset + MAX_BLOCK_SIZE]
                         chunk_addr = addr + offset
+                        print(f"    [INFO] Escribiendo sub-bloque @0x{chunk_addr:05X}")
                         ok = self.write_block(chunk_addr, chunk)
                         if not ok:
                             print(f"\n[BSL] ✗ Fallo al escribir sub-bloque "
