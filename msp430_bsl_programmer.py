@@ -160,7 +160,7 @@ def parse_ti_txt(filepath: str) -> list[tuple[int, bytes]]:
 class MSP430_BSL:
     """Programador BSL para MSP430 vía puerto serie."""
 
-    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 10.0):
+    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 5.0):
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -172,7 +172,7 @@ class MSP430_BSL:
             port=self.port,
             baudrate=self.baudrate,
             bytesize=serial.EIGHTBITS,
-            parity=serial.PARITY_EVEN,
+            parity=serial.PARITY_NONE,
             stopbits=serial.STOPBITS_ONE,
             timeout=self.timeout
         )
@@ -341,7 +341,7 @@ class MSP430_BSL:
 
         self.open()
         self.ser.write(bytes([0x05]))
-        response = self.ser.read(256)
+        response = self.ser.read(5)
         if response:
             print(f"[Mission Boss] Respuesta recibida: {response.hex()}")
             for b in response:
@@ -352,6 +352,7 @@ class MSP430_BSL:
         else:
             print("[Mission Boss] ✗ Sin respuesta (timeout)")
 
+        self.ser.close()
         return False 
 
     # ─────────────────────────────────────────
