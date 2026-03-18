@@ -339,12 +339,13 @@ class MSP430_BSL:
         """Ejemplo de comando personalizado para pedir a Mission Boss que active modo bypass UART."""
         print("[Mission Boss] Solicitando modo bypass UART...")
 
-        self.send_mb_command(CMD_MB_SET_BYPASS_UART_MODE, b'')
+        self.open()
+        self.ser.write(bytes([0x05]))
         response = self.ser.read(256)
         if response:
             print(f"[Mission Boss] Respuesta recibida: {response.hex()}")
-            for i, b in enumerate(response):
-                if b == MB_ACK and i == 3:  # ACK esperado en posición 3 (después de SUBSYSTEM_ID, CMD_ID, DATA_SIZE)
+            for b in response:
+                if b == MB_ACK:  # ACK esperado
                     print("[Mission Boss] ✓ Modo bypass UART activado")
                     return True
             print("[Mission Boss] ✗ Respuesta no reconocida o ACK no encontrado")
@@ -567,11 +568,15 @@ def main():
     bsl = MSP430_BSL(port=port, baudrate=args.baud)
 
     # Solicitar modo bypass UART a Mission Boss
-    bsl.request_mb_bypass_uart_mode()
-    time.sleep(1)
+    if (bsl.request_mb_bypass_uart_mode()):
+        print("[Mission Boss] Modo bypass UART activado, continuando con programación...")
+        time.sleep(1)
 
-    # Ejecutar programación
-    success = bsl.program_ti_txt(filepath)
-    sys.exit(0 if success else 1)
+        # Ejecutar programación
+        success = bsl.program_ti_txt(filepath)
+        sys.exit(0 if success else 1)
+    else:
+        print("[Mission Boss] No se pudo activar modo bypass UART. Abortando.")
+        sys.exit(1)
 
 main() 
