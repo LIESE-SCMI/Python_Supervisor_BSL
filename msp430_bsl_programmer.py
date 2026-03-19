@@ -55,6 +55,12 @@ BSL_PACKET_SIZE_TOO_BIG = 0x54
 BSL_UNKNOWN_ERROR   = 0x55
 BSL_UNKNOWN_BAUD    = 0x56
 
+# Longitud de respuestas a cada comando
+BSL_RX_PASSWORD_RESP_LEN = 8
+BSL_MASS_ERASE_RESP_LEN = 0  # puede no devolver nada o un ACK no limpio
+BSL_RX_DATA_BLOCK_RESP_LEN = 8  # solo ACK
+BSL_LOAD_PC_RESP_LEN = 0  # no se espera respuesta
+
 ACK_MESSAGES = {
     0x00: "ACK OK",
     0x51: "Error: Header incorrecto",
@@ -160,7 +166,7 @@ def parse_ti_txt(filepath: str) -> list[tuple[int, bytes]]:
 class MSP430_BSL:
     """Programador BSL para MSP430 vía puerto serie."""
 
-    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 50.0):
+    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 5.0):
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -207,7 +213,7 @@ class MSP430_BSL:
 
         return frame
 
-    def _send_frame(self, cmd: int, data: bytes, expect_response: bool = True) -> bytes | None:
+    def _send_frame(self, cmd: int, data: bytes, expect_response: bool = True, receive_num_bytes: int = 10) -> bytes | None:
         """Envía un frame BSL y opcionalmente espera respuesta."""
         frame = self._build_frame(cmd, data)
         self.ser.write(frame)
@@ -215,12 +221,12 @@ class MSP430_BSL:
         time.sleep(0.4)  # pequeño delay tras envío
 
         if expect_response:
-            return self._read_response()
+            return self._read_response(receive_num_bytes)
         return None
 
-    def _read_response(self) -> bytes:
+    def _read_response(self, num_bytes: int = 10) -> bytes:
         """Lee la respuesta del BSL (ACK byte o frame completo)."""
-        response = self.ser.read(256)
+        response = self.ser.read(num_bytes)
         return response
 
     def _check_ack(self, response: bytes, cmd_name: str) -> bool:
@@ -248,7 +254,7 @@ class MSP430_BSL:
         print("[BSL] Enviando password...")
         if len(password) != 32:
             raise ValueError("La password debe ser exactamente 32 bytes")
-        resp = self._send_frame(CMD_RX_PASSWORD, password)
+        resp = self._send_frame(CMD_RX_PASSWORD, password, expect_response=True, receive_num_bytes=BSL_RX_PASSWORD_RESP_LEN)
         return self._check_ack(resp, "RX_PASSWORD")
 
     def mass_erase(self) -> bool:
@@ -258,7 +264,7 @@ class MSP430_BSL:
         """
         print("[BSL] Enviando password incorrecta → Mass Erase...")
         wrong_password = bytes([0x00] * 32)
-        resp = self._send_frame(CMD_RX_PASSWORD, wrong_password)
+        self._send_frame(CMD_RX_PASSWORD, wrong_password, expect_response=False, receive_num_bytes=BSL_MASS_ERASE_RESP_LEN)
         # Mass-erase puede no devolver ACK limpio; se espera igual
         time.sleep(0.1)
         return True  # el BSL continúa después del erase
@@ -271,7 +277,7 @@ class MSP430_BSL:
             (address >> 16) & 0xFF
         ])
         payload = addr_bytes + data
-        resp = self._send_frame(CMD_RX_DATA_BLOCK, payload)
+        resp = self._send_frame(CMD_RX_DATA_BLOCK, payload, expect_response=True, receive_num_bytes=BSL_RX_DATA_BLOCK_RESP_LEN)
         return self._check_ack(resp, f"RX_DATA_BLOCK @0x{address:05X}")
 
     def crc_check(self, address: int, length: int) -> bool:
@@ -295,7 +301,7 @@ class MSP430_BSL:
             (address >> 8) & 0xFF,
             (address >> 16) & 0xFF
         ])
-        resp = self._send_frame(CMD_LOAD_PC, payload, expect_response=False)
+        resp = self._send_frame(CMD_LOAD_PC, payload, expect_response=False, receive_num_bytes=BSL_LOAD_PC_RESP_LEN)
         print("  [LOAD_PC] ✓ Comando enviado — el target debería arrancar")
         return True
 
@@ -558,9 +564,8 @@ def main():
         print(f"✗ Archivo no encontrado: {filepath}")
         sys.exit(1)
 
-    bsl = MSP430_BSL(port=port, baudrate=args.baud)
-
     # Ejecutar programación
+    bsl = MSP430_BSL(port=port, baudrate=args.baud)
     success = bsl.program_ti_txt(filepath)
     sys.exit(0 if success else 1)
 
