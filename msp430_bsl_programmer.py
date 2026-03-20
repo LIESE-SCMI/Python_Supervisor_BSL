@@ -57,7 +57,7 @@ BSL_UNKNOWN_BAUD    = 0x56
 
 # Longitud de respuestas a cada comando
 BSL_RX_PASSWORD_RESP_LEN = 8
-BSL_MASS_ERASE_RESP_LEN = 0  # puede no devolver nada o un ACK no limpio
+BSL_MASS_ERASE_RESP_LEN = 1  # puede no devolver nada o un ACK no limpio
 BSL_RX_DATA_BLOCK_RESP_LEN = 8  # solo ACK
 BSL_LOAD_PC_RESP_LEN = 0  # no se espera respuesta
 
@@ -216,7 +216,9 @@ class MSP430_BSL:
     def _send_frame(self, cmd: int, data: bytes, expect_response: bool = True, receive_num_bytes: int = 10) -> bytes | None:
         """Envía un frame BSL y opcionalmente espera respuesta."""
         frame = self._build_frame(cmd, data)
-        self.ser.write(frame)
+        for b in frame:
+            self.ser.write(bytes([b]))
+            time.sleep(0.01)  # pequeño delay entre bytes para asegurar recepción
         self.ser.flush()
         time.sleep(0.4)  # pequeño delay tras envío
 
@@ -255,6 +257,7 @@ class MSP430_BSL:
         if len(password) != 32:
             raise ValueError("La password debe ser exactamente 32 bytes")
         resp = self._send_frame(CMD_RX_PASSWORD, password, expect_response=True, receive_num_bytes=BSL_RX_PASSWORD_RESP_LEN)
+        print(f" [RX_PASSWORD] Respuesta: {resp.hex() if resp else 'None'}")
         return self._check_ack(resp, "RX_PASSWORD")
 
     def mass_erase(self) -> bool:
@@ -264,7 +267,7 @@ class MSP430_BSL:
         """
         print("[BSL] Enviando password incorrecta → Mass Erase...")
         wrong_password = bytes([0x00] * 32)
-        self._send_frame(CMD_RX_PASSWORD, wrong_password, expect_response=False, receive_num_bytes=BSL_MASS_ERASE_RESP_LEN)
+        self._send_frame(CMD_RX_PASSWORD, wrong_password, expect_response=True, receive_num_bytes=BSL_MASS_ERASE_RESP_LEN)
         # Mass-erase puede no devolver ACK limpio; se espera igual
         time.sleep(0.1)
         return True  # el BSL continúa después del erase
@@ -278,6 +281,7 @@ class MSP430_BSL:
         ])
         payload = addr_bytes + data
         resp = self._send_frame(CMD_RX_DATA_BLOCK, payload, expect_response=True, receive_num_bytes=BSL_RX_DATA_BLOCK_RESP_LEN)
+        print(f" [RX_DATA_BLOCK] Respuesta: {resp.hex() if resp else 'None'}")
         return self._check_ack(resp, f"RX_DATA_BLOCK @0x{address:05X}")
 
     def crc_check(self, address: int, length: int) -> bool:
@@ -398,6 +402,7 @@ class MSP430_BSL:
         # 2. Abrir UART
         self.open()
         time.sleep(0.05)
+        self.ser.write(0x00)
 
         try:
             # 3. Mass-erase
