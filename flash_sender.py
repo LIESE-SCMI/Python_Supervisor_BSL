@@ -195,9 +195,9 @@ def send_firmware(port: str, fw_size: int, fw_data: bytes):
 
     try:
         # ── 0. Enviar byte de inicio 0x06 ────────────────────
-        #ser.write(bytes([START_BYTE]))
-        #print(f"  {C.GRAY}Byte de inicio enviado: 0x{START_BYTE:02X}{C.RESET}")
-        #time.sleep(INTER_BYTE_DELAY)
+        ser.write(bytes([START_BYTE]))
+        print(f"  {C.GRAY}Byte de inicio enviado: 0x{START_BYTE:02X}{C.RESET}")
+        time.sleep(INTER_BYTE_DELAY)
 
         # ── 1. Enviar tamaño como uint32 big-endian (byte a byte) ──
         size_bytes = struct.pack(">I", fw_size)
