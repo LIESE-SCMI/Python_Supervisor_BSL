@@ -29,7 +29,7 @@ import serial.tools.list_ports
 # ─── Constantes ──────────────────────────────────────────────
 BAUD_RATE        = 9600
 PARITY           = serial.PARITY_NONE
-BLOCK_SIZE       = 256
+BLOCK_SIZE       = 1024
 ACK_BYTE         = 0x79
 NACK_BYTE        = 0x1F
 START_BYTE       = 0x06
