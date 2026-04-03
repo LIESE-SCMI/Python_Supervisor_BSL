@@ -29,7 +29,7 @@ import serial.tools.list_ports
 # ─── Constantes ──────────────────────────────────────────────
 BAUD_RATE        = 9600
 PARITY           = serial.PARITY_NONE
-BLOCK_SIZE       = 1024
+BLOCK_SIZE       = 256
 ACK_BYTE         = 0x79
 NACK_BYTE        = 0x1F
 START_BYTE       = 0x06
@@ -46,7 +46,7 @@ INTER_BYTE_DELAY = 0.001
 # Tiempo de espera tras abrir el puerto antes de enviar el primer byte.
 # El Launchpad backchannel genera pulsos en la línea al conectarse,
 # y el MSP430 necesita terminar su inicialización (GPIO/UART/SPI).
-STARTUP_DELAY    = 1.0        # segundos — reducir si el arranque es más rápido
+STARTUP_DELAY    = 2.0        # segundos — reducir si el arranque es más rápido
 
 # ─── Colores ANSI (funcionan en Windows 10+, Linux, macOS) ───
 class C:
