@@ -12,7 +12,7 @@ Protocolo:
 
 Uso:
   python flash_sender.py
-  (el script pide puerto COM y archivo de forma interactiva)
+  (el script pide puerto COM y archivo de2 forma interactiva)
 
 Dependencias:
   pip install pyserial
